@@ -30,7 +30,7 @@ type Client struct {
 	m     map[string]*HostClient
 }
 
-func (c *Client) Call(ctx context.Context, host, serviceMethod string, args, reply any) error {
+func (c *Client) Call(ctx context.Context, addr, serviceMethod string, args, reply any) error {
 	startCleaner := false
 
 	c.mLock.Lock()
@@ -39,10 +39,10 @@ func (c *Client) Call(ctx context.Context, host, serviceMethod string, args, rep
 		m = make(map[string]*HostClient)
 		c.m = m
 	}
-	hc := m[host]
+	hc := m[addr]
 	if hc == nil {
 		hc = &HostClient{
-			Addr:                host,
+			Addr:                addr,
 			Dial:                c.Dial,
 			MaxConns:            c.MaxConnsPerHost,
 			MaxIdleConnDuration: c.MaxIdleConnDuration,
@@ -51,7 +51,7 @@ func (c *Client) Call(ctx context.Context, host, serviceMethod string, args, rep
 			MaxConnWaitTimeout:  c.MaxConnWaitTimeout,
 		}
 
-		m[host] = hc
+		m[addr] = hc
 		if len(m) == 1 {
 			startCleaner = true
 		}
