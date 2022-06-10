@@ -1,6 +1,6 @@
 # TCP based JSON RPC 1.0 Client\Server
 
-The package combines TCP connections management from (valyala/fasthttp)[https://github.com/valyala/fasthttp] and
+The package combines TCP connections management from [valyala/fasthttp](https://github.com/valyala/fasthttp) and
 Go's standard [jsonrpc codec](https://pkg.go.dev/net/rpc/jsonrpc).
 
 Here is a simple example. A server wishes to export an object of type Arith:
