@@ -175,11 +175,6 @@ type serverConn struct {
 
 func (c *serverConn) ReadRequestHeader(req *rpc.Request) error {
 	atomic.StoreInt64(&c.lastUsedAt, time.Now().Unix())
-	if c.readTimeout > 0 {
-		if err := c.conn.SetReadDeadline(time.Now().Add(c.readTimeout)); err != nil {
-			return err
-		}
-	}
 	if err := c.codec.ReadRequestHeader(req); err != nil {
 		return err
 	}
@@ -188,7 +183,23 @@ func (c *serverConn) ReadRequestHeader(req *rpc.Request) error {
 }
 
 func (c *serverConn) ReadRequestBody(args any) error {
-	return c.codec.ReadRequestBody(args)
+	if c.readTimeout > 0 {
+		if err := c.conn.SetReadDeadline(time.Now().Add(c.readTimeout)); err != nil {
+			return err
+		}
+	}
+
+	if err := c.codec.ReadRequestBody(args); err != nil {
+		return err
+	}
+
+	if c.readTimeout > 0 {
+		if err := c.conn.SetReadDeadline(time.Time{}); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (c *serverConn) WriteResponse(resp *rpc.Response, reply any) error {
@@ -198,7 +209,17 @@ func (c *serverConn) WriteResponse(resp *rpc.Response, reply any) error {
 		}
 	}
 
-	return c.codec.WriteResponse(resp, reply)
+	if err := c.codec.WriteResponse(resp, reply); err != nil {
+		return err
+	}
+
+	if c.writeTimeout > 0 {
+		if err := c.conn.SetWriteDeadline(time.Time{}); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (c *serverConn) Shutdown() {
