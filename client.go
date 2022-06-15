@@ -200,15 +200,15 @@ func (c *HostClient) call(ctx context.Context, serviceMethod string, args, reply
 			return
 		}
 
+		resCh <- nil
+
 		if c.WriteTimeout > 0 || c.ReadTimeout > 0 {
 			if err = conn.SetDeadline(time.Time{}); err != nil {
 				c.closeConn(cc)
 				return
 			}
 		}
-
 		c.releaseConn(cc)
-		resCh <- nil
 	}()
 
 	select {
@@ -457,7 +457,7 @@ func (c *HostClient) nextAddr() string {
 
 func (c *HostClient) closeConn(cc *rpcClient) {
 	c.decConnsCount()
-	cc.conn.Close()
+	cc.client.Close()
 }
 
 func (c *HostClient) connsCleaner() {
